@@ -2,6 +2,7 @@ package com.maynormoe.takeout.common;
 
 import lombok.extern.slf4j.Slf4j;
 import net.bytebuddy.dynamic.scaffold.inline.MethodNameTransformer;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -74,18 +75,15 @@ public class CommonController {
             FileInputStream fileInputStream = new FileInputStream(new File(basePath + name));
             // 输出流返回给客户端
             ServletOutputStream servletOutputStream = response.getOutputStream();
-            response.setContentType("image/jpeg");
-            int len = 0;
-            byte[] bytes = new byte[1024];
-            while ((len = fileInputStream.read(bytes)) != -1) {
-                servletOutputStream.write(bytes, 0, len);
-            }
+
+            //  使用 IOUtils 将文件内容直接复制到输出流：
+            response.setHeader("Content-Disposition", "inline; filename=" + name);
+            IOUtils.copy(fileInputStream, servletOutputStream);
             servletOutputStream.close();
             fileInputStream.close();
         } catch (Exception exception) {
             exception.printStackTrace();
         }
-
         return Results.success(null);
     }
 }

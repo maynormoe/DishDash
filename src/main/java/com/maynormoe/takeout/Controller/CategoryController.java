@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @author Maynormoe
@@ -69,5 +70,16 @@ public class CategoryController {
         categoryService.updateById(category);
         log.info("修改成功");
         return Results.success(null);
+    }
+
+    @GetMapping("/list")
+    public Results<List<Category>> list(Category category) {
+        // 条件构造器
+        LambdaQueryWrapper<Category> categoryLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        categoryLambdaQueryWrapper.eq(category.getType() != null, Category::getType, category.getType());
+        // 添加排序条件
+        categoryLambdaQueryWrapper.orderByAsc(Category::getSort).orderByDesc(Category::getUpdateTime);
+        List<Category> list = categoryService.list(categoryLambdaQueryWrapper);
+        return Results.success(list);
     }
 }
