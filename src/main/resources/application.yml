@@ -14,6 +14,7 @@ spring:
     restart:
       enabled: true
       additional-paths: src/main/java
+      additional-exclude: classpath:backend/** classpath:front/**
 
 mybatis-plus:
   configuration:

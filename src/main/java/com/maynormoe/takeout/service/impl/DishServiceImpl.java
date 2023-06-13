@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -98,5 +99,34 @@ public class DishServiceImpl extends ServiceImpl<DishMapper, Dish> implements Di
             return item;
         }).collect(Collectors.toList());
         dishFlavorService.saveBatch(flavors);
+    }
+
+    /**
+     * @param ids id数组
+     */
+    @Override
+    public void removeWithDish(Long[] ids) throws Exception {
+
+
+        // 查询售卖状态看是否可以删除
+        LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<Dish>();
+        dishLambdaQueryWrapper.in(Dish::getId, ids);
+        dishLambdaQueryWrapper.eq(Dish::getStatus, 1);
+
+        int count = this.count(dishLambdaQueryWrapper);
+
+        if (count > 0) {
+            throw new Exception("菜品已起售, 不可删除");
+        }
+
+
+        // 删除基本信息
+        this.removeByIds(Arrays.asList(ids));
+
+        //删除关联菜品口味信息
+        LambdaQueryWrapper<DishFlavor> dishFlavorLambdaQueryWrapper = new LambdaQueryWrapper<DishFlavor>();
+        dishFlavorLambdaQueryWrapper.in(DishFlavor::getDishId, ids);
+
+        dishFlavorService.remove(dishFlavorLambdaQueryWrapper);
     }
 }

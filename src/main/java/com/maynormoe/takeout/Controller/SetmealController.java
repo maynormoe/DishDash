@@ -6,9 +6,11 @@ import com.maynormoe.takeout.common.Results;
 import com.maynormoe.takeout.dto.DishDto;
 import com.maynormoe.takeout.dto.SetmealDto;
 import com.maynormoe.takeout.entity.Category;
+import com.maynormoe.takeout.entity.Dish;
 import com.maynormoe.takeout.entity.Setmeal;
 import com.maynormoe.takeout.entity.SetmealDish;
 import com.maynormoe.takeout.service.CategoryService;
+import com.maynormoe.takeout.service.DishService;
 import com.maynormoe.takeout.service.SetmealDishService;
 import com.maynormoe.takeout.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +38,9 @@ public class SetmealController {
 
     @Resource
     private CategoryService categoryService;
+
+    @Resource
+    private DishService dishService;
 
 
     /**
@@ -154,5 +159,41 @@ public class SetmealController {
         setmealService.removeWithSetmealDish(ids);
         log.info("删除成功");
         return Results.success(null);
+    }
+
+    @GetMapping("/list")
+    public Results<List<Setmeal>> list(Setmeal setmeal) {
+        LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<Setmeal>();
+        setmealLambdaQueryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
+        setmealLambdaQueryWrapper.eq(setmeal.getStatus() != null, Setmeal::getStatus, setmeal.getStatus());
+        setmealLambdaQueryWrapper.orderByDesc(Setmeal::getUpdateTime);
+
+        List<Setmeal> list = setmealService.list(setmealLambdaQueryWrapper);
+        return Results.success(list);
+    }
+
+    /**
+     * 根据套餐id查询套餐明细
+     *
+     * @param id 套餐id
+     * @return Results<SetmealDto>
+     */
+    @GetMapping("/dish/{id}")
+    public Results<List<DishDto>> getSetmealDish(@PathVariable Long id) {
+        LambdaQueryWrapper<SetmealDish> setmealDishLambdaQueryWrapper = new LambdaQueryWrapper<SetmealDish>();
+        setmealDishLambdaQueryWrapper.eq(SetmealDish::getSetmealId, id);
+
+        // 查询套餐下的菜品
+        List<SetmealDish> setmealDishlist = setmealDishService.list(setmealDishLambdaQueryWrapper);
+
+        List<DishDto> list = setmealDishlist.stream().map((item) -> {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(item, dishDto);
+            Long dishId = item.getDishId();
+            Dish dish = dishService.getById(dishId);
+            BeanUtils.copyProperties(dish, dishDto);
+            return dishDto;
+        }).collect(Collectors.toList());
+        return Results.success(list);
     }
 }

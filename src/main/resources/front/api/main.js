@@ -1,4 +1,4 @@
-//获取所有的菜品分类
+ //获取所有的菜品分类
 function categoryListApi() {
     return $axios({
       'url': '/category/list',
@@ -28,6 +28,7 @@ function setmealListApi(data) {
 function cartListApi(data) {
     return $axios({
         'url': '/shoppingCart/list',
+        // 'url': '/front/cartData.json',
         'method': 'get',
         params:{...data}
     })

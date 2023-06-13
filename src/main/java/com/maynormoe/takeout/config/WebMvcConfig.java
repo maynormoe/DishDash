@@ -27,6 +27,8 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
     /**
      * 扩展消息转换器
+     * 扩展消息转换器
+     *
      * @param converters 转换消息
      */
     @Override

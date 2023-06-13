@@ -8,6 +8,7 @@ import com.maynormoe.takeout.common.Results;
 import com.maynormoe.takeout.dto.DishDto;
 import com.maynormoe.takeout.entity.Category;
 import com.maynormoe.takeout.entity.Dish;
+import com.maynormoe.takeout.entity.DishFlavor;
 import com.maynormoe.takeout.service.CategoryService;
 import com.maynormoe.takeout.service.DishFlavorService;
 import com.maynormoe.takeout.service.DishService;
@@ -88,16 +89,14 @@ public class DishController {
 
 
     /**
-     * 批量根据id删除菜品
+     * 批量根据id删除菜品和关联口味信息
      *
      * @return Results<Page < Dish>>
      */
     @DeleteMapping
-    public Results<Dish> deleteById(Long[] ids) {
+    public Results<Dish> deleteById(Long[] ids) throws Exception {
         log.info("删除id为{}的菜品数据", Arrays.toString(ids));
-        for (Long id : ids) {
-            dishService.removeById(id);
-        }
+        dishService.removeWithDish(ids);
         log.info("删除成功");
         return Results.success(null);
     }
@@ -163,7 +162,7 @@ public class DishController {
      * @return Results<List < Dish>>
      */
     @GetMapping("/list")
-    public Results<List<Dish>> list(Dish dish) {
+    public Results<List<DishDto>> list(Dish dish) {
         // 条件构造器
         LambdaQueryWrapper<Dish> dishLambdaQueryWrapper = new LambdaQueryWrapper<Dish>();
         dishLambdaQueryWrapper.eq(dish.getCategoryId() != null, Dish::getCategoryId, dish.getCategoryId());
@@ -171,6 +170,25 @@ public class DishController {
         // 排序构造器
         dishLambdaQueryWrapper.orderByAsc(Dish::getSort).orderByDesc(Dish::getUpdateTime);
         List<Dish> list = dishService.list(dishLambdaQueryWrapper);
-        return Results.success(list);
+
+        List<DishDto> dishDtoList = list.stream().map((item) -> {
+            DishDto dishDto = new DishDto();
+            BeanUtils.copyProperties(item, dishDto);
+            Long categoryId = item.getCategoryId();
+            // 根据Id查询对象
+            Category category = categoryService.getById(categoryId);
+            if (category != null) {
+                String categoryName = category.getName();
+                dishDto.setCategoryName(categoryName);
+            }
+            // 当前菜品id
+            Long dishId = item.getId();
+            LambdaQueryWrapper<DishFlavor> dishDtoLambdaQueryWrapper = new LambdaQueryWrapper<DishFlavor>();
+            dishDtoLambdaQueryWrapper.eq(DishFlavor::getDishId, dishId);
+            List<DishFlavor> dishFlavorList = dishFlavorService.list(dishDtoLambdaQueryWrapper);
+            dishDto.setFlavors(dishFlavorList);
+            return dishDto;
+        }).collect(Collectors.toList());
+        return Results.success(dishDtoList);
     }
 }

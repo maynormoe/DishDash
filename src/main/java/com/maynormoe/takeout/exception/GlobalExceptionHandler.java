@@ -35,9 +35,9 @@ public class GlobalExceptionHandler {
         return Results.error("未知错误");
     }
 
-    @ExceptionHandler(Exception.class)
-    public Results<String> exceptionHandler(Exception exception) {
-        log.error(exception.getMessage());
-        return Results.error(exception.getMessage());
-    }
+//    @ExceptionHandler(Exception.class)
+//    public Results<String> exceptionHandler(Exception exception) {
+//        log.error(exception.getMessage());
+//        return Results.error(exception.getMessage());
+//    }
 }

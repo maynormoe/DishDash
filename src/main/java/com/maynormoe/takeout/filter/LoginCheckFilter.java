@@ -14,6 +14,7 @@ import java.io.IOException;
 
 /**
  * 检查登录
+ *
  * @author Maynormoe
  */
 @Slf4j
@@ -23,7 +24,8 @@ public class LoginCheckFilter implements Filter {
     /**
      * 路径匹配器
      */
-    public static  final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+    public static final AntPathMatcher PATH_MATCHER = new AntPathMatcher();
+
     @Override
     public void doFilter(ServletRequest servletRequest, ServletResponse servletResponse, FilterChain filterChain) throws IOException, ServletException {
         HttpServletRequest request = (HttpServletRequest) servletRequest;
@@ -32,11 +34,14 @@ public class LoginCheckFilter implements Filter {
         // 获取本次请求url
         String requestUrl = request.getRequestURI();
 
-        String[] urls = new String[] {
+        String[] urls = new String[]{
                 "/employee/login",
                 "/employee/logout",
                 "/backend/**",
-                "/front/**"
+                "/front/**",
+                "/common/**",
+                "/user/sendMsg",
+                "/user/login"
         };
         // 判断本次请求需不要处理
         boolean check = check(urls, requestUrl);
@@ -45,7 +50,7 @@ public class LoginCheckFilter implements Filter {
             filterChain.doFilter(request, response);
             return;
         }
-        // 判断登录状态，已登录直接放行
+        // 判断登录状态，已登录直接放行(后台管理)
         if (request.getSession().getAttribute("employee") != null) {
             Long empId = (Long) request.getSession().getAttribute("employee");
             BaseContext.setCurrentId(empId);
@@ -53,6 +58,16 @@ public class LoginCheckFilter implements Filter {
             filterChain.doFilter(request, response);
             return;
         }
+
+        // 判断登录状态，已登录直接放行(移动端)
+        if (request.getSession().getAttribute("user") != null) {
+            Long userId = (Long) request.getSession().getAttribute("user");
+            BaseContext.setCurrentId(userId);
+            log.info("用户已经登录,用户id{}", userId);
+            filterChain.doFilter(request, response);
+            return;
+        }
+
         log.info("用户未登录");
         //未登录响应数据
         response.getWriter().write(JSON.toJSONString(Results.error("NOTLOGIN")));
@@ -61,17 +76,20 @@ public class LoginCheckFilter implements Filter {
 
     /**
      * 路径匹配
+     *
      * @param requestUrl 拦截的url
-     * @param urls 默认放行的url
+     * @param urls       默认放行的url
      * @return boolean
      */
     public boolean check(String[] urls, String requestUrl) {
-        for(String url : urls) {
+        for (String url : urls) {
             boolean match = PATH_MATCHER.match(url, requestUrl);
             if (match) {
                 return true;
             }
         }
         return false;
-    };
+    }
+
+    ;
 }
