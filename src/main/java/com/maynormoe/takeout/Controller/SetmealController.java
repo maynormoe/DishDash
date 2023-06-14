@@ -15,6 +15,8 @@ import com.maynormoe.takeout.service.SetmealDishService;
 import com.maynormoe.takeout.service.SetmealService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
@@ -50,6 +52,7 @@ public class SetmealController {
      * @return Results<SetmealDto>
      */
     @PostMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public Results<SetmealDto> save(@RequestBody SetmealDto setmealDto) {
         log.info("添加套餐{}", setmealDto.toString());
         setmealService.saveWithDish(setmealDto);
@@ -119,6 +122,7 @@ public class SetmealController {
      * @return Results<SetmealDto>
      */
     @PutMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public Results<SetmealDto> update(@RequestBody SetmealDto setmealDto) {
         log.info("修改id为{}的套餐信息{}", setmealDto.getId().toString(), setmealDto.toString());
         setmealService.updateWithSetmealDishById(setmealDto);
@@ -154,6 +158,7 @@ public class SetmealController {
      * @return Results<Setmeal>
      */
     @DeleteMapping
+    @CacheEvict(value = "setmealCache", allEntries = true)
     public Results<Setmeal> delete(@RequestParam Long[] ids) throws Exception {
         log.info("删除id为{}的套餐数据", Arrays.toString(ids));
         setmealService.removeWithSetmealDish(ids);
@@ -162,6 +167,7 @@ public class SetmealController {
     }
 
     @GetMapping("/list")
+    @Cacheable(value = "setmealCache", key = "#setmeal.categoryId + '_' + #setmeal.status")
     public Results<List<Setmeal>> list(Setmeal setmeal) {
         LambdaQueryWrapper<Setmeal> setmealLambdaQueryWrapper = new LambdaQueryWrapper<Setmeal>();
         setmealLambdaQueryWrapper.eq(setmeal.getCategoryId() != null, Setmeal::getCategoryId, setmeal.getCategoryId());
