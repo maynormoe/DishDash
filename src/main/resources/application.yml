@@ -40,6 +40,5 @@ knife4j:
   enable: true
 
 takeout:
-  path: E:\img\
-
+  path: E:\img\ # 图片在服务器上存放的路径
 
