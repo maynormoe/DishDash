@@ -5,6 +5,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
 import springfox.bean.validators.configuration.BeanValidatorPluginsConfiguration;
 import springfox.documentation.builders.ApiInfoBuilder;
 import springfox.documentation.builders.PathSelectors;
@@ -39,7 +40,7 @@ public class SwaggerConfiguration {
                 .groupName("1.0")
                 .select()
                 //这里指定扫描包路径
-                .apis(RequestHandlerSelectors.basePackage("com.maynormoe.takeout.controller"))
+                .apis(RequestHandlerSelectors.basePackage("com.maynormoe.takeout"))
                 .paths(PathSelectors.any())
                 .build();
     }
